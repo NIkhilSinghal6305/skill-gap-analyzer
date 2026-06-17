@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Skill Gap Analyzer — Find Your Path{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 40px; padding-bottom: 40px;">
+
+    <!-- ═══ HERO SECTION ═══ -->
+    <div class="text-center mb-8">
+        <h1 style="font-size: 32px; font-weight: 800; color: #333; margin-bottom: 8px;">
+            Discover Your Skill Gaps
+        </h1>
+        <p style="color: #888; font-size: 15px; max-width: 520px; margin: 0 auto; line-height: 1.6;">
+            Select your target role, check your current skills, and get a detailed analysis
+            with personalized learning recommendations.
+        </p>
+    </div>
+
+    <!-- ═══ FORM ═══ -->
+    <form action="{{ url_for('analyze') }}" method="POST" id="analyze-form">
+        <div class="space-y-4">
+
+            <!-- ── Card 1: User Info & Role ── -->
+            <div class="card mb-6">
+                <div class="section-header">
+                    <div class="section-icon" style="background-color: #eef2ff;">
+                        <svg style="color: #4f46e5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <h2 class="section-title">Your Profile</h2>
+                </div>
+
+                <div class="grid-2">
+                    <!-- Name Input -->
+                    <div class="form-group">
+                        <label for="user_name" class="form-label">Your Name</label>
+                        <input type="text" id="user_name" name="user_name" required
+                               placeholder="Enter your full name"
+                               class="form-input">
+                    </div>
+
+                    <!-- Role Dropdown -->
+                    <div class="form-group">
+                        <label for="role_id" class="form-label">Target Job Role</label>
+                        <select id="role_id" name="role_id" required class="form-select">
+                            <option value="" disabled selected>Select a role...</option>
+                            {% for role in roles %}
+                            <option value="{{ role.role_id }}">{{ role.role_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Card 2: Skills Selection ── -->
+            <div class="card mb-6">
+                <div class="section-header">
+                    <div class="section-icon" style="background-color: #f3e8ff;">
+                        <svg style="color: #7c3aed;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                        </svg>
+                    </div>
+                    <h2 class="section-title">Your Current Skills</h2>
+                    <span id="skill-count" class="badge badge-indigo" style="margin-left: auto;">
+                        0 selected
+                    </span>
+                </div>
+
+                <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+                    Select all the skills you currently possess. Be honest for accurate results.
+                </p>
+
+                <!-- Skill Categories -->
+                <div class="space-y-4">
+                    {% for category, skills in ordered_categories %}
+                    <div class="skill-category">
+                        <button type="button"
+                                class="category-toggle"
+                                onclick="toggleCategory(this)">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="category-count">{{ skills|length }}</span>
+                                <span>{{ category }}</span>
+                            </div>
+                            <svg class="category-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div class="category-content hidden">
+                            {% for skill in skills %}
+                            <label class="skill-checkbox" for="skill_{{ skill.skill_id }}">
+                                <input type="checkbox" id="skill_{{ skill.skill_id }}"
+                                       name="skills" value="{{ skill.skill_id }}"
+                                       class="skill-input"
+                                       onchange="updateSkillCount()">
+                                <span>{{ skill.skill_name }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ── Submit Button ── -->
+            <div class="text-center">
+                <button type="submit" id="analyze-btn" class="btn btn-primary btn-lg">
+                    <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Analyze My Skills
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Toggle skill category visibility
+    function toggleCategory(button) {
+        const content = button.nextElementSibling;
+        const arrow = button.querySelector('.category-arrow');
+        content.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+    }
+
+    // Update selected skill count badge
+    function updateSkillCount() {
+        const count = document.querySelectorAll('.skill-input:checked').length;
+        const badge = document.getElementById('skill-count');
+        badge.textContent = count + ' selected';
+
+        // Color the badge based on count
+        if (count > 0) {
+            badge.classList.remove('badge-indigo');
+            badge.classList.add('badge-green');
+        } else {
+            badge.classList.remove('badge-green');
+            badge.classList.add('badge-indigo');
+        }
+
+        // Update checked label styling
+        document.querySelectorAll('.skill-checkbox').forEach(label => {
+            const input = label.querySelector('input');
+            if (input.checked) {
+                label.classList.add('checked');
+            } else {
+                label.classList.remove('checked');
+            }
+        });
+    }
+
+    // Expand first category by default
+    document.addEventListener('DOMContentLoaded', function() {
+        const first = document.querySelector('.category-toggle');
+        if (first) toggleCategory(first);
+    });
+</script>
+{% endblock %}

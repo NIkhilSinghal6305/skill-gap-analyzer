@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard | Skill Gap Analyzer{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 40px; padding-bottom: 40px;">
+
+    <!-- ═══ HEADER ═══ -->
+    <div class="text-center mb-8">
+        <h1 style="font-size: 28px; font-weight: 800; color: #333; margin-bottom: 4px;">Analytics Dashboard</h1>
+        <p style="color: #999; font-size: 13px;">Aggregated insights from all skill gap analyses</p>
+    </div>
+
+    {% if not has_data %}
+    <!-- ═══ EMPTY STATE ═══ -->
+    <div class="card text-center" style="max-width: 420px; margin: 0 auto; padding: 48px 32px;">
+        <div class="section-icon" style="background-color: #eef2ff; width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 10px;">
+            <svg style="color: #4f46e5; width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+        </div>
+        <h2 style="font-size: 18px; font-weight: 700; color: #333; margin-bottom: 8px;">No Data Yet</h2>
+        <p style="font-size: 14px; color: #999; margin-bottom: 20px;">Run your first skill gap analysis to start seeing insights here.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+            Start Analyzing →
+        </a>
+    </div>
+
+    {% else %}
+    <!-- ═══ STAT CARDS ═══ -->
+    <div class="grid-4 mb-10">
+        <!-- Total Analyses -->
+        <div class="stat-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span class="stat-label">Total Analyses</span>
+                <div class="section-icon" style="background-color: #eff6ff;">
+                    <svg style="color: #2563eb;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="stat-value">{{ total_analyses }}</p>
+        </div>
+
+        <!-- Average Match -->
+        <div class="stat-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span class="stat-label">Avg Match</span>
+                <div class="section-icon" style="background-color: #ecfdf5;">
+                    <svg style="color: #059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="stat-value">{{ avg_match }}%</p>
+        </div>
+
+        <!-- Most Selected Role -->
+        <div class="stat-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span class="stat-label">Top Role</span>
+                <div class="section-icon" style="background-color: #f3e8ff;">
+                    <svg style="color: #7c3aed;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="stat-value-sm">{{ most_selected_role }}</p>
+            <p class="stat-sub">{{ most_selected_role_count }} analyses</p>
+        </div>
+
+        <!-- Most Missing Skill -->
+        <div class="stat-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span class="stat-label">Top Gap</span>
+                <div class="section-icon" style="background-color: #fef2f2;">
+                    <svg style="color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="stat-value-sm">{{ most_missing_skill }}</p>
+            <p class="stat-sub">Missing {{ most_missing_count }} times</p>
+        </div>
+    </div>
+
+    <!-- ═══ MOST DEMANDED SKILL ═══ -->
+    {% if most_demanded %}
+    <div class="card mb-10" style="display: flex; align-items: center; gap: 16px;">
+        <div class="section-icon" style="background-color: #fffbeb; width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;">
+            <svg style="color: #d97706; width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+            </svg>
+        </div>
+        <div>
+            <p class="stat-label" style="margin-bottom: 2px;">Most Demanded Skill Across All Roles</p>
+            <p style="font-size: 16px; font-weight: 700; color: #333;">
+                {{ most_demanded.skill_name }}
+                <span style="font-size: 13px; font-weight: 400; color: #999; margin-left: 4px;">— required by {{ most_demanded.demand_count }} roles</span>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ CHARTS ═══ -->
+    {% if charts %}
+    <div class="grid-2-lg mb-10">
+        {% if charts.match_distribution %}
+        <div class="card">
+            <h3 class="stat-label" style="margin-bottom: 16px;">Match Distribution</h3>
+            <img src="{{ url_for('static', filename=charts.match_distribution) }}" alt="Match Percentage Distribution"
+                 style="width: 100%; border-radius: 6px;" loading="lazy">
+        </div>
+        {% endif %}
+
+        {% if charts.missing_skills %}
+        <div class="card">
+            <h3 class="stat-label" style="margin-bottom: 16px;">Top Missing Skills</h3>
+            <img src="{{ url_for('static', filename=charts.missing_skills) }}" alt="Most Missing Skills"
+                 style="width: 100%; border-radius: 6px;" loading="lazy">
+        </div>
+        {% endif %}
+
+        {% if charts.skill_demand %}
+        <div class="card">
+            <h3 class="stat-label" style="margin-bottom: 16px;">Skill Demand Across Roles</h3>
+            <img src="{{ url_for('static', filename=charts.skill_demand) }}" alt="Skill Demand Analysis"
+                 style="width: 100%; border-radius: 6px;" loading="lazy">
+        </div>
+        {% endif %}
+
+        {% if charts.role_popularity %}
+        <div class="card">
+            <h3 class="stat-label" style="margin-bottom: 16px;">Job Role Popularity</h3>
+            <img src="{{ url_for('static', filename=charts.role_popularity) }}" alt="Job Role Popularity"
+                 style="width: 100%; border-radius: 6px;" loading="lazy">
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- ═══ RECENT ANALYSES TABLE ═══ -->
+    {% if recent_analyses %}
+    <div class="card mb-8">
+        <h3 class="stat-label" style="margin-bottom: 16px;">Recent Analyses</h3>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Target Role</th>
+                        <th>Match %</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in recent_analyses %}
+                    <tr>
+                        <td style="color: #333;">{{ row.user_name }}</td>
+                        <td>{{ row.role_name }}</td>
+                        <td>
+                            {% set pct = row.match_percentage | float %}
+                            <span class="badge {% if pct >= 70 %}badge-green{% elif pct >= 40 %}badge-amber{% else %}badge-red{% endif %}">
+                                {{ pct }}%
+                            </span>
+                        </td>
+                        <td style="font-size: 12px; color: #999;">{{ row.analyzed_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ BACK BUTTON ═══ -->
+    <div class="text-center mt-8">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            ← New Analysis
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

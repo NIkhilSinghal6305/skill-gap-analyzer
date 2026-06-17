@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Results — {{ analysis.role_name }} | Skill Gap Analyzer{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 40px; padding-bottom: 40px;">
+
+    <!-- ═══ HEADER ═══ -->
+    <div class="text-center mb-8">
+        <p style="font-size: 13px; color: #999; margin-bottom: 4px;">Analysis for <span style="color: #555; font-weight: 500;">{{ analysis.user_name }}</span></p>
+        <h1 style="font-size: 28px; font-weight: 800; color: #333; margin-bottom: 4px;">{{ analysis.role_name }}</h1>
+        <p style="color: #999; font-size: 13px; max-width: 480px; margin: 0 auto;">{{ analysis.role_description }}</p>
+    </div>
+
+    <!-- ═══ MATCH PERCENTAGE RING ═══ -->
+    <div style="display: flex; justify-content: center; margin-bottom: 40px;">
+        <div class="card text-center" style="max-width: 320px; width: 100%;">
+            <div style="position: relative; width: 160px; height: 160px; margin: 0 auto 16px;">
+                <svg style="width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 120 120">
+                    <!-- Background circle -->
+                    <circle cx="60" cy="60" r="52" fill="none"
+                            stroke="#e8e8e8" stroke-width="10"/>
+                    <!-- Progress circle -->
+                    <circle cx="60" cy="60" r="52" fill="none"
+                            stroke-width="10" stroke-linecap="round"
+                            class="progress-ring"
+                            {% if match_percentage >= 70 %}stroke="#059669"
+                            {% elif match_percentage >= 40 %}stroke="#d97706"
+                            {% else %}stroke="#dc2626"{% endif %}
+                            stroke-dasharray="{{ 326.7 }}"
+                            stroke-dashoffset="{{ 326.7 - (326.7 * match_percentage / 100) }}"/>
+                </svg>
+                <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <span style="font-size: 32px; font-weight: 800;
+                                 {% if match_percentage >= 70 %}color: #059669;
+                                 {% elif match_percentage >= 40 %}color: #d97706;
+                                 {% else %}color: #dc2626;{% endif %}"
+                          id="match-value">0</span>
+                    <span style="font-size: 13px; color: #999; font-weight: 500;">% Match</span>
+                </div>
+            </div>
+            <p style="font-size: 14px; color: #666;">
+                You matched <strong style="color: #333;">{{ matched_skills|length }}</strong> out of
+                <strong style="color: #333;">{{ matched_skills|length + missing_skills|length }}</strong> required skills
+            </p>
+            {% if match_percentage >= 70 %}
+            <div class="badge badge-green" style="margin-top: 12px;">
+                ✓ Strong Fit
+            </div>
+            {% elif match_percentage >= 40 %}
+            <div class="badge badge-amber" style="margin-top: 12px;">
+                ⚠ Moderate — Room to Grow
+            </div>
+            {% else %}
+            <div class="badge badge-red" style="margin-top: 12px;">
+                △ Significant Gap — Start Learning!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══ SKILLS COMPARISON ═══ -->
+    <div class="grid-2-lg mb-10">
+        <!-- Matched Skills -->
+        <div class="card">
+            <div class="section-header">
+                <div class="section-icon" style="background-color: #ecfdf5;">
+                    <svg style="color: #059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <h2 class="section-title">Matched Skills</h2>
+                <span class="badge badge-green" style="margin-left: auto;">{{ matched_skills|length }}</span>
+            </div>
+            {% if matched_skills %}
+            <div class="flex-wrap gap-2">
+                {% for skill in matched_skills %}
+                <span class="skill-tag skill-tag-green">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {{ skill }}
+                </span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="font-size: 14px; color: #999; font-style: italic;">No matching skills found.</p>
+            {% endif %}
+        </div>
+
+        <!-- Missing Skills -->
+        <div class="card">
+            <div class="section-header">
+                <div class="section-icon" style="background-color: #fef2f2;">
+                    <svg style="color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </div>
+                <h2 class="section-title">Missing Skills</h2>
+                <span class="badge badge-red" style="margin-left: auto;">{{ missing_skills|length }}</span>
+            </div>
+            {% if missing_skills %}
+            <div class="flex-wrap gap-2">
+                {% for skill in missing_skills %}
+                <span class="skill-tag skill-tag-red">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    {{ skill }}
+                </span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="font-size: 14px; color: #059669; font-weight: 500;">🎉 Amazing! You have all required skills!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══ LEARNING RECOMMENDATIONS ═══ -->
+    {% if resources_by_skill %}
+    <div class="mb-10">
+        <div class="section-header">
+            <div class="section-icon" style="background-color: #fffbeb;">
+                <svg style="color: #d97706;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+            </div>
+            <h2 class="section-title">Learning Recommendations</h2>
+        </div>
+
+        <div class="grid-2-lg">
+            {% for skill_name, resources in resources_by_skill.items() %}
+            <div class="card">
+                <h3 style="font-size: 14px; font-weight: 600; color: #dc2626; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></span>
+                    {{ skill_name }}
+                </h3>
+                <div class="space-y-2">
+                    {% for resource in resources %}
+                    <a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer"
+                       class="resource-link">
+                        <div class="resource-icon"
+                             {% if resource.resource_type == 'Course' %}style="background-color: #eff6ff; color: #2563eb;"
+                             {% elif resource.resource_type == 'Documentation' %}style="background-color: #ecfdf5; color: #059669;"
+                             {% elif resource.resource_type == 'Video' %}style="background-color: #fef2f2; color: #dc2626;"
+                             {% elif resource.resource_type == 'Tutorial' %}style="background-color: #fffbeb; color: #d97706;"
+                             {% elif resource.resource_type == 'Book' %}style="background-color: #f3e8ff; color: #7c3aed;"
+                             {% else %}style="background-color: #f5f5f5; color: #666;"{% endif %}>
+                            {% if resource.resource_type == 'Course' %}
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 7l-9-5 9-5 9 5-9 5z"/></svg>
+                            {% elif resource.resource_type == 'Documentation' %}
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            {% elif resource.resource_type == 'Video' %}
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            {% elif resource.resource_type == 'Book' %}
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                            {% else %}
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            {% endif %}
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <p class="resource-title">{{ resource.title }}</p>
+                            <p class="resource-meta">{{ resource.platform }} · {{ resource.resource_type }}</p>
+                        </div>
+                        <svg style="width: 14px; height: 14px; color: #ccc; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ ACTION BUTTONS ═══ -->
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 40px; flex-wrap: wrap;">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            ← New Analysis
+        </a>
+        <a href="{{ url_for('analytics') }}" class="btn btn-primary">
+            View Analytics →
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Animate the match percentage counter
+    document.addEventListener('DOMContentLoaded', function() {
+        const target = {{ match_percentage }};
+        const el = document.getElementById('match-value');
+        let current = 0;
+        const duration = 1500; // ms
+        const step = target / (duration / 16); // ~60fps
+
+        function animate() {
+            current += step;
+            if (current >= target) {
+                el.textContent = target % 1 === 0 ? target.toFixed(0) : target.toFixed(1);
+                return;
+            }
+            el.textContent = Math.floor(current);
+            requestAnimationFrame(animate);
+        }
+
+        // Start after a short delay so the ring animation is visible
+        setTimeout(animate, 300);
+    });
+</script>
+{% endblock %}
